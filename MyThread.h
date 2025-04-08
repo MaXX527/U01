@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <wx/thread.h>
 #include <wx/event.h>
 #include <wx/app.h>
@@ -9,6 +10,13 @@
 #include "struct.h"
 #include "Main.h"
 //#include "MyProcess.h"
+//#include <poppler/cpp/poppler-document.h>
+//#include <poppler/cpp/poppler-page.h>
+//#include <poppler/cpp/poppler-page-renderer.h>
+#include <mupdf/fitz.h>
+
+//#pragma comment(lib, "poppler-cpp.lib")
+#pragma comment(lib, "libmupdf.lib")
 
 constexpr auto ID_COMPRESSED = 100;
 

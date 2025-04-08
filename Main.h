@@ -7,6 +7,7 @@
 #include <wx/config.h>
 #include <wx/stdpaths.h>
 #include <wx/dynarray.h>
+#include <wx/uiaction.h>
 
 #include <boost/filesystem.hpp>
 
@@ -23,15 +24,17 @@
 #include "struct.h"
 #include "MyThread.h"
 #include "DialogAbout.h"
+#include <wx/config.h>
 
 //#define wxDEBUG_LEVEL 0
 
-#pragma comment(lib, "wxbase32u.lib")
-#pragma comment(lib, "libboost_filesystem-vc142-mt-gd-x64-1_82.lib")
+#pragma comment(lib, "wxbase32ud.lib")
+#pragma comment(lib, "libboost_filesystem-vc143-mt-gd-x64-1_87.lib")
 #pragma comment(lib, "CORE_RL_Magick++_.lib")
 #pragma comment(lib, "CORE_RL_MagickCore_.lib")
 #pragma comment(lib, "gsdll64.lib")
 #pragma comment(lib, "FreeImage.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 constexpr auto MAXLEN = 2000;
 

@@ -636,8 +636,13 @@ void MyFrame::OnContextMenu(wxDataViewEvent& event)
                     wxLaunchDefaultApplication(path.string(), wxEXEC_SYNC);
             }, ID_PopupOpenNew);
         popupMenu->AppendSeparator();
-        popupMenu->Append(ID_PopupDeleteRow, "Удалить строку");
-        Bind(wxEVT_MENU, [=](wxEvent&) { m_list->DeleteItem(m_list->GetSelectedRow()); }, ID_PopupDeleteRow);
+        if(1 == m_list->GetSelectedItemsCount())
+            popupMenu->Append(ID_PopupDeleteRow, "Удалить строку");
+        else
+            popupMenu->Append(ID_PopupDeleteRow, "Удалить выбранные строки");
+        // Bind(wxEVT_MENU, [=](wxEvent&) { m_list->DeleteItem(m_list->GetSelectedRow()); }, ID_PopupDeleteRow);
+
+        Bind(wxEVT_MENU, [=](wxEvent&) { wxKeyEvent evt; evt.m_keyCode = wxKeyCode::WXK_DELETE; OnDeleteItem(evt); }, ID_PopupDeleteRow);
     }
     popupMenu->Append(ID_PopupClear, "Удалить всё");
     Bind(wxEVT_MENU, [=](wxEvent&) { m_list->DeleteAllItems(); }, ID_PopupClear);
