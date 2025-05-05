@@ -83,8 +83,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);c:\boost_1_82_0;c:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;c:\wxWidgets\include;c:\wxWidgets\include\msvc;c:\FreeImage\Dist\x64;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);c:\wxWidgets\lib\vc_x64_lib;c:\boost_1_82_0\stage\lib;c:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib;c:\Program Files\gs\gs10.01.1\bin;c:\FreeImage\Dist\x64;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);c:\Users\baganms\source\repos\mupdf-1.26.0-rc2-source\include;c:\boost_1_87_0;c:\Program Files\ImageMagick-7.1.1-Q16-HDRI\include;c:\wxMSW-3.2.7\include;c:\wxMSW-3.2.7\include\msvc;c:\FreeImage\Dist\x64;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);c:\Users\baganms\source\repos\mupdf-1.26.0-rc2-source\platform\win32\x64\Release;c:\boost_1_87_0\stage\lib;c:\wxMSW-3.2.7\lib\vc_x64_lib;c:\Program Files\ImageMagick-7.1.1-Q16-HDRI\lib;c:\Program Files\gs\gs10.01.1\bin;c:\FreeImage\Dist\x64;c:\lib</LibraryPath>
+    <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath);c:\wxMSW-3.2.7\lib\vc_x64_lib;</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -134,8 +135,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WXUSINGDLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -162,7 +164,16 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="struct.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="U011.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="check.bmp" />
+    <Image Include="main.ico" />
+    <Image Include="MFC.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\..\..\..\..\wxMSW-3.2.7\wxwidgets.props" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

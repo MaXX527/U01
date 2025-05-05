@@ -10,7 +10,8 @@ DialogAbout::DialogAbout(wxWindow* parent, wxWindowID id, const wxString& title,
 	wxBoxSizer* bSizer4;
 	bSizer4 = new wxBoxSizer(wxHORIZONTAL);
 
-	m_bmpMFC = new wxStaticBitmap(this, wxID_ANY, wxBitmap("res/MFC.bmp", wxBITMAP_TYPE_BMP), wxDefaultPosition, wxDefaultSize, 0);
+	//m_bmpMFC = new wxStaticBitmap(this, wxID_ANY, wxBitmap("res/MFC.bmp", wxBITMAP_TYPE_BMP), wxDefaultPosition, wxDefaultSize, 0);
+	m_bmpMFC = new wxStaticBitmap(this, wxID_ANY, wxBitmap("#105"), wxDefaultPosition, wxDefaultSize, 0);
 	bSizer4->Add(m_bmpMFC, 0, wxALL, 5);
 
 	m_txtAbout = new wxStaticText(this, wxID_ANY, wxT("\r\nЭто должна быть программа для сжимания TIFF и PDF\r\n(c)ОГАУ МФЦ"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL);
@@ -21,7 +22,8 @@ DialogAbout::DialogAbout(wxWindow* parent, wxWindowID id, const wxString& title,
 
 	bSizer3->Add(bSizer4, 1, wxEXPAND, 5);
 
-	m_btnOK = new wxBitmapButton(this, wxID_ANY, /*wxNullBitmap*/ wxBitmap("res/check.bmp", wxBITMAP_TYPE_BMP), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW | 0);
+	//m_btnOK = new wxBitmapButton(this, wxID_ANY, /*wxNullBitmap*/ wxBitmap("res/check.bmp", wxBITMAP_TYPE_BMP), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW | 0);
+	m_btnOK = new wxBitmapButton(this, wxID_ANY, /*wxNullBitmap*/ wxBitmap("#104"), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW | 0);
 	m_btnOK->Bind(wxEVT_BUTTON, &DialogAbout::OnClickOK, this);
 	bSizer3->Add(m_btnOK, 0, wxALIGN_CENTER | wxALL, 5);
 

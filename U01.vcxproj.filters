@@ -52,4 +52,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="U011.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="main.ico" />
+    <Image Include="check.bmp" />
+    <Image Include="MFC.bmp" />
+  </ItemGroup>
 </Project>

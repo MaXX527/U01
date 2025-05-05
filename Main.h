@@ -24,11 +24,16 @@
 #include "struct.h"
 #include "MyThread.h"
 #include "DialogAbout.h"
-#include <wx/config.h>
+//#include <wx/config.h>
+#include "resource.h"
 
 //#define wxDEBUG_LEVEL 0
 
+#ifdef _DEBUG
 #pragma comment(lib, "wxbase32ud.lib")
+#else
+#pragma comment(lib, "wxbase32u.lib")
+#endif
 #pragma comment(lib, "libboost_filesystem-vc143-mt-gd-x64-1_87.lib")
 #pragma comment(lib, "CORE_RL_Magick++_.lib")
 #pragma comment(lib, "CORE_RL_MagickCore_.lib")
@@ -115,4 +120,11 @@ private:
     void OnDeleteItem(wxKeyEvent& event);
 
     wxHashTable m_timers;
+    //wxHashTable m_threads;
+    //std::list<int, MyThread*> m_threads;
+    wxVector<wxThread *> m_threads;
+
+    int m_coreCount;
+    int m_threadCount;
+    wxCriticalSection *m_critical;
 };

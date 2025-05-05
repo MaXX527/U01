@@ -27,7 +27,9 @@ bool MyApp::OnInit()
     //wxMessageBox(wxString(env_magick_coder) + "\r\n" + wxString(env_magick_filter));
 
     MyFrame* frame = new MyFrame();
+    frame->SetIcon(wxIcon("#101"));
     frame->Show(true);
+
     return true;
 }
 
@@ -87,6 +89,8 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Сжималка PDF и TIF")
     //m_list->GetColumn(1)->SetWidth(300);
     m_list->GetColumn(2)->SetAlignment(wxALIGN_RIGHT);
     m_list->GetColumn(3)->SetAlignment(wxALIGN_RIGHT);
+
+    //m_list->GetColumn(2)->SetSortable(true);
 
     m_list->Bind(wxEVT_KEY_DOWN, &MyFrame::OnDeleteItem, this);
     m_list->Bind(wxEVT_COMMAND_DATAVIEW_ITEM_CONTEXT_MENU, &MyFrame::OnContextMenu, this);
@@ -172,12 +176,15 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Сжималка PDF и TIF")
     
     SetMinSize(wxSize(700, 400));
     SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT));
-    SetIcon(wxIcon("WXICON_AAA"));
+    //SetIcon(wxIcon("WXICON_AAA"));
 
     LoadConfig();
 
     char** argv = wxGetApp().argv;
     Magick::InitializeMagick(*argv);
+
+    m_critical = new wxCriticalSection();
+    m_threadCount = 0;
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -187,7 +194,7 @@ void MyFrame::OnExit(wxCommandEvent& event)
 
 void MyFrame::OnAbout(wxCommandEvent& event)
 {
-    //wxMessageBox("Тест wxWidgets", "О программе", wxOK | wxICON_INFORMATION);
+    //wxMessageBox(wxString::Format("Тест wxWidgets %d", cores), "О программе", wxOK | wxICON_INFORMATION);
     DialogAbout dlg = new DialogAbout(this);
     dlg.ShowModal();
 }
@@ -273,9 +280,15 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
         wxMessageBox("Нет файлов для сжатия");
         return;
     }
+    m_coreCount = wxThread::GetCPUCount();
+    if (m_coreCount < 1)
+        m_coreCount = 1;
+    m_threadCount = 0;
+    FindWindowById(ID_PDF)->Disable();
     //std::list<Magick::Image> imageList;
     //Magick::Image image;
     //char percent[10] = "";
+    int filetype = 0;
     for (int i = 0; i < m_list->GetItemCount(); i++)
     {
         TIFparam param;
@@ -298,11 +311,10 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
                     data = ".";
                 m_list->SetValue(data, i, 3);
             } , wxID_ANY);
-        ((wxTimer*)(m_timers.Get(i)))->Start(500);
-        m_list->SetValue(".", i, 3);
 
         if("tif" == GetDataViewListString(i, 0))
         {
+            filetype = 0;
             param.rowNumber = i;
             param.type = "tif";
             //param.compressType = Magick::CompressionType::LZWCompression;
@@ -340,9 +352,9 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
             }
             param.newfilename = newfilename;
 
-            MyThread* thread = new MyThread(param, 0);
-            thread->Create();
-            thread->Run();
+            //MyThread* thread = new MyThread(param, 0);
+            //thread->Create();
+            //thread->Run();
 
             /*try
             {
@@ -377,6 +389,7 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
         //C:\Program Files\ImageMagick-7.1.1-Q16>magick convert -colorspace gray -density 120 -compress jpeg -quality 70 "C:\tmp\1 2 3.pdf" "C:\tmp\123.pdf"
         if("pdf" == GetDataViewListString(i, 0))
         {
+            filetype = 1;
             /*std::list<Magick::Image> imageList;
             //Magick::Image image;
             char percent[10] = "";
@@ -434,9 +447,9 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
 
             //CoUninitialize();
 
-            MyThread* thread = new MyThread(param, 1);
-            thread->Create();
-            thread->Run();
+            //MyThread* thread = new MyThread(param, 1);
+            //thread->Create();
+            //thread->Run();
             
             //int exit_code = param.exit_code;
 
@@ -444,15 +457,29 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
             //wxSprintf(msg, "Error code %d", exit_code);
 
         }
+
+        MyThread* thread = new MyThread(param, filetype);
+        thread->Create();
+        while (m_threadCount >= m_coreCount)
+        {
+            wxThread::Sleep(100);
+            wxYield();
+        }
+        thread->Run();
+        ((wxTimer*)(m_timers.Get(i)))->Start(500);
+        m_list->SetValue(".", i, 3);
+        m_threadCount++;
     }
 }
 
 void MyFrame::OnTIFCompressed(wxThreadEvent& event)
 {
-    ((wxTimer*)(m_timers.Get(event.GetPayload<TIFparam>().rowNumber)))->Stop();
     //wxMessageBox(wxString::Format("%d", event.GetPayload<TIFparam>().percent));
+    //if (event.GetPayload<TIFparam>().percent > 95)
+    //    ((wxTimer*)(m_timers.Get(event.GetPayload<TIFparam>().rowNumber)))->Stop();
     if (-1 == event.GetPayload<TIFparam>().percent)
     {
+        ((wxTimer*)(m_timers.Get(event.GetPayload<TIFparam>().rowNumber)))->Stop();
         if ("pdf" == event.GetPayload<TIFparam>().type)
         {
             wxRenameFile(event.GetPayload<TIFparam>().pdfnewfilename, event.GetPayload<TIFparam>().newfilename);
@@ -460,12 +487,15 @@ void MyFrame::OnTIFCompressed(wxThreadEvent& event)
         }
         m_list->SetValue(GetFileSize(boost::filesystem::path(event.GetPayload<TIFparam>().newfilename)), event.GetPayload<TIFparam>().rowNumber, 3);
         m_list->SetValue(0, event.GetPayload<TIFparam>().rowNumber, 4);
+        m_threadCount--;
     }
     else
     {
         m_list->SetValue(event.GetPayload<TIFparam>().percent, event.GetPayload<TIFparam>().rowNumber, 4);
         this->Update();
     }
+    if(0 == m_threadCount)
+        FindWindowById(ID_PDF)->Enable();
 }
 
 void MyFrame::OnSize(wxSizeEvent& event)
@@ -476,7 +506,7 @@ void MyFrame::OnSize(wxSizeEvent& event)
     m_list->GetColumn(2)->SetWidth(75);
     m_list->GetColumn(3)->SetWidth(75);
     m_list->GetColumn(4)->SetWidth(75);
-    m_list->GetColumn(1)->SetWidth(this->GetClientSize().GetWidth() - 50 - 75 - 75 - 75 - 10);
+    m_list->GetColumn(1)->SetWidth(this->GetClientSize().GetWidth() - 50 - 75 - 75 - 75 - 40);
     event.Skip();
 }
 

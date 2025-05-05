@@ -103,7 +103,7 @@ void* MyThread::Entry()
                 FreeImage_Unload(fib_small);
                 //FreeImage_Unload(fib_small_color);
             }
-            m_param.percent = page / countPages * 100;
+            m_param.percent = 100 * page / countPages;
             wxThreadEvent* evt = new wxThreadEvent(wxEVT_THREAD);
             evt->SetPayload<TIFparam>(m_param);
             wxTheApp->GetTopWindow()->GetEventHandler()->QueueEvent(evt);
@@ -117,26 +117,37 @@ void* MyThread::Entry()
     {
         std::list<Magick::Image> imageList;
         Magick::ReadOptions options;
-        options.density(Magick::Geometry(300, 300));
+        options.density(Magick::Geometry(tempDPI, tempDPI));
 
         fz_context* ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
         fz_register_document_handlers(ctx);
         fz_document* doc = fz_open_document(ctx, m_param.pdffilename.c_str());
         int page_count = fz_count_pages(ctx, doc);
         //wxMessageBox(wxString::Format("%d", page_count));
-        fz_matrix ctm = fz_scale(300.0/96, 300.0/96);
-        for (int i = 0; i < page_count; i++)
+        fz_matrix ctm = fz_scale(tempDPI/96.0, tempDPI/96.0);
+        try {
+            for (int i = 0; i < page_count; i++)
+            {
+                fz_pixmap* pix = fz_new_pixmap_from_page_number(ctx, doc, i, ctm, fz_device_rgb(ctx), 0);
+
+                //wxMessageBox(wxString::Format("%d x %d", pix->w, pix->h));
+                const std::string pfile = wxString::Format("%s-%d.jpg", m_param.pdffilename, i).ToStdString();
+                pix->xres = tempDPI;
+                pix->yres = tempDPI;
+                fz_save_pixmap_as_jpeg(ctx, pix, pfile.c_str(), m_param.quality);
+                fz_drop_pixmap(ctx, pix);
+                Magick::readImages(&imageList, pfile, options);
+                boost::filesystem::remove(pfile);
+
+                m_param.percent = (i + 1) * 50 / page_count;
+                wxThreadEvent* evt = new wxThreadEvent(wxEVT_THREAD);
+                evt->SetPayload<TIFparam>(m_param);
+                wxTheApp->GetTopWindow()->GetEventHandler()->QueueEvent(evt);
+            }
+        }
+        catch (Magick::Error err)
         {
-            fz_pixmap* pix = fz_new_pixmap_from_page_number(ctx, doc, i, ctm, fz_device_rgb(ctx), 0);
-            
-            //wxMessageBox(wxString::Format("%d x %d", pix->w, pix->h));
-            const std::string pfile = wxString::Format("%s-%d.jpg", m_param.pdffilename, i).ToStdString();
-            pix->xres = 300;
-            pix->yres = 300;
-            fz_save_pixmap_as_jpeg(ctx, pix, pfile.c_str(), 70);
-            fz_drop_pixmap(ctx, pix);
-            Magick::readImages(&imageList, pfile, options);
-            boost::filesystem::remove(pfile);
+            wxMessageBox(err.what());
         }
         fz_drop_document(ctx, doc);
         fz_drop_context(ctx);
@@ -220,8 +231,8 @@ void* MyThread::Entry()
                 if(m_param.convertToGray)
                     img->colorSpace(MagickCore::ColorspaceType::GRAYColorspace);
                 //img->autoGamma();
-                img->autoLevel();
-                img->normalize();
+                //img->autoLevel();
+                //img->normalize();
                 img->deskew(100.0);
                 //img->resize(Magick::Geometry("2548x3508"));
                 //img->interlaceType(MagickCore::InterlaceType::NoInterlace);
@@ -233,7 +244,7 @@ void* MyThread::Entry()
                 //wxSprintf(percent, "%0.2f %%", 100.0 * (++n) / imageList.size());
                 //m_list->SetValue(percent, i, 3);
                 //this->Update();
-                m_param.percent = ++n / imageList.size() * 100;
+                m_param.percent = 50 + (++n * 50 / imageList.size());
                 wxThreadEvent* evt = new wxThreadEvent(wxEVT_THREAD);
                 evt->SetPayload<TIFparam>(m_param);
                 wxTheApp->GetTopWindow()->GetEventHandler()->QueueEvent(evt);

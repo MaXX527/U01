@@ -30,8 +30,9 @@ public:
 private:
     TIFparam m_param;
     int m_type; // 0 - tif, 1 - pdf
+    const int tempDPI = 300;
 
-    void OnTerm();
+    //void OnTerm();
 
     //void* m_inst;
     //MyProcess m_proc;
