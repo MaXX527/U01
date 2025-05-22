@@ -121,9 +121,13 @@ void* MyThread::Entry()
 
         fz_context* ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
         fz_register_document_handlers(ctx);
-        fz_document* doc = fz_open_document(ctx, m_param.pdffilename.c_str());
+        wxFile pdf(m_param.pdffilename.c_str(), wxFile::read);
+        wxFileOffset pdfSize = pdf.Length();
+        unsigned char* pdfBuffer = new unsigned char[pdfSize];
+        pdf.Read(pdfBuffer, pdfSize);
+        //fz_document* doc = fz_open_document(ctx, m_param.pdffilename.c_str());
+        fz_document* doc = fz_open_document_with_stream(ctx, ".pdf", fz_open_memory(ctx, pdfBuffer, pdfSize));
         int page_count = fz_count_pages(ctx, doc);
-        //wxMessageBox(wxString::Format("%d", page_count));
         fz_matrix ctm = fz_scale(tempDPI/96.0, tempDPI/96.0);
         try {
             for (int i = 0; i < page_count; i++)
@@ -131,13 +135,22 @@ void* MyThread::Entry()
                 fz_pixmap* pix = fz_new_pixmap_from_page_number(ctx, doc, i, ctm, fz_device_rgb(ctx), 0);
 
                 //wxMessageBox(wxString::Format("%d x %d", pix->w, pix->h));
-                const std::string pfile = wxString::Format("%s-%d.jpg", m_param.pdffilename, i).ToStdString();
+                const std::string pfile = wxString::Format("memory:%s-%d.jpg", boost::filesystem::path(m_param.pdffilename).filename().c_str(), i).ToStdString();
                 pix->xres = tempDPI;
                 pix->yres = tempDPI;
+
                 fz_save_pixmap_as_jpeg(ctx, pix, pfile.c_str(), m_param.quality);
+
                 fz_drop_pixmap(ctx, pix);
+
+                //Magick::Blob blob(bitmap, sizeof(bitmap));
+                //Magick::Image mimg;// (blob);
+                //mimg.write(pfile);
+                //wxMessageBox(pfile);
                 Magick::readImages(&imageList, pfile, options);
-                boost::filesystem::remove(pfile);
+                //Magick::readImages(&imageList, blob, options);
+                wxRemoveFile(pfile);
+                //fz_drop_pixmap(ctx, pix);
 
                 m_param.percent = (i + 1) * 50 / page_count;
                 wxThreadEvent* evt = new wxThreadEvent(wxEVT_THREAD);
@@ -151,6 +164,7 @@ void* MyThread::Entry()
         }
         fz_drop_document(ctx, doc);
         fz_drop_context(ctx);
+        delete[] pdfBuffer;
         //Magick::Image image;
         //char percent[10] = "";
         //poppler::document* doc = poppler::document::load_from_file(m_param.pdffilename);

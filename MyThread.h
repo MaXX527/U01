@@ -5,6 +5,7 @@
 #include <wx/event.h>
 #include <wx/app.h>
 #include <wx/process.h>
+#include <wx/file.h>
 #include <boost/filesystem.hpp>
 #include <FreeImage.h>
 #include "struct.h"

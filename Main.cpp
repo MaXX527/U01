@@ -428,7 +428,8 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
             param.rowNumber = i;
             param.type = "pdf";
             //param.compressType = Magick::CompressionType::LZWCompression;
-            param.pdffilename = wxString::Format("%s\\temppdf-%d.pdf", boost::filesystem::path(filename).parent_path().string(), i);
+            //param.pdffilename = wxString::Format("%s\\temppdf-%d.pdf", boost::filesystem::path(filename).parent_path().string(), i);
+            param.pdffilename = wxString::Format("memory:%s-temppdf-%d.pdf", "pdf" /*boost::filesystem::path(filename).filename().string()*/, i);
             param.filename = filename; // grid->GetCellValue(i, 1).ToStdString();
             wxCopyFile(param.filename, param.pdffilename);
             //param.depth = 4;
@@ -437,7 +438,8 @@ void MyFrame::OnClickPDF(wxCommandEvent& event)
             //param.normalize = true;
             //param.strip = true;
             //param.rescale = false;
-            param.pdfnewfilename = wxString::Format("%s\\temppdf-%d_compress.pdf", boost::filesystem::path(filename).parent_path().string(), i);
+            //param.pdfnewfilename = wxString::Format("%s\\temppdf-%d_compress.pdf", boost::filesystem::path(filename).parent_path().string(), i);
+            param.pdfnewfilename = wxString::Format("memory:%s-temppdf-%d_compress.pdf", "pdf" /*boost::filesystem::path(filename).filename().string()*/, i);
             param.newfilename = newfilename;
             param.resolution = m_spinPDFdpi->GetValue();
             param.convertToGray = m_checkPDFgray->GetValue();
@@ -482,8 +484,24 @@ void MyFrame::OnTIFCompressed(wxThreadEvent& event)
         ((wxTimer*)(m_timers.Get(event.GetPayload<TIFparam>().rowNumber)))->Stop();
         if ("pdf" == event.GetPayload<TIFparam>().type)
         {
-            wxRenameFile(event.GetPayload<TIFparam>().pdfnewfilename, event.GetPayload<TIFparam>().newfilename);
+            //wxRenameFile(event.GetPayload<TIFparam>().pdfnewfilename, event.GetPayload<TIFparam>().newfilename);
+            //wxCopyFile(event.GetPayload<TIFparam>().pdfnewfilename, event.GetPayload<TIFparam>().newfilename);
+            //wxStructStat stat;
+            //wxStat(event.GetPayload<TIFparam>().pdfnewfilename, &stat);
+            //long bufSize = (long)stat.st_size; // boost::filesystem::file_size(event.GetPayload<TIFparam>().pdfnewfilename);
+            long bufSize = (long)boost::filesystem::file_size(event.GetPayload<TIFparam>().pdfnewfilename);
+            //wxMessageBox(wxString::Format("%d", bufSize));
+            char* Buf = new char[bufSize];
+            std::ifstream ifile(event.GetPayload<TIFparam>().pdfnewfilename, std::ios::binary);
+            //wxMessageBox(event.GetPayload<TIFparam>().pdfnewfilename);
+            ifile.read(Buf, bufSize);
+            ifile.close();
+            std::ofstream ofile(event.GetPayload<TIFparam>().newfilename, std::ios::binary);
+            ofile.write(Buf, bufSize);
+            ofile.close();
+            wxRemoveFile(event.GetPayload<TIFparam>().pdfnewfilename);
             wxRemoveFile(event.GetPayload<TIFparam>().pdffilename);
+            delete[] Buf;
         }
         m_list->SetValue(GetFileSize(boost::filesystem::path(event.GetPayload<TIFparam>().newfilename)), event.GetPayload<TIFparam>().rowNumber, 3);
         m_list->SetValue(0, event.GetPayload<TIFparam>().rowNumber, 4);
